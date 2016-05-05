@@ -31,6 +31,19 @@ var showQuestion = function(question) {
 	return result;
 };
 
+var showAnswerer = function(answerer) {
+    var result = $('.templates .answerer').clone();
+    
+    var answererElem = result.find('.answerer-name a');
+    answererElem.attr('href', answerer.link);
+    answererElem.text(answerer.display_name);
+    
+    var reputation = result.find('.answerer-reputation');
+    reputation.html('<span>' + answerer.reputation + '</span>');
+    
+    return result;
+};
+
 
 // this function takes the results object from StackOverflow
 // and returns the number of results and tags to be appended to DOM
@@ -81,14 +94,55 @@ var getUnanswered = function(tags) {
 	});
 };
 
+var viewTopAnswerers = function(answerers) {
+    // the parameters we need to pass in our request to StackOverflow's API
+	var request = { 
+		tag: answerers,
+		site: 'stackoverflow',
+		order: 'desc',
+		sort: 'creation'
+	};
+    
+	$.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/" + request.tag + "/top-answerers/all_time",
+		data: request,
+		dataType: "jsonp",//use jsonp to avoid cross origin issues
+		type: "GET",
+	})
+	.done(function(result){ //this waits for the ajax to return with a succesful promise object
+        console.log(result);
+		var searchResults = showSearchResults(request.tag, result.items.length);
+
+		$('.search-results').html(searchResults);
+		//$.each is a higher order function. It takes an array and a function as an argument.
+		//The function is executed once for each item in the array.
+		$.each(result.items, function(i, item) {
+			var answerer = showAnswerer(item.user);
+			$('.results').append(answerer);
+		});
+	})
+	.fail(function(jqXHR, error){ //this waits for the ajax to return with an error promise object
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
 
 $(document).ready( function() {
 	$('.unanswered-getter').submit( function(e){
-		e.preventDefault();
+        e.preventDefault();
 		// zero out results if previous search has run
 		$('.results').html('');
 		// get the value of the tags the user submitted
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
+	});
+    $('.inspiration-getter').submit( function(e){
+		e.preventDefault();
+		// zero out results if previous search has run
+		$('.results').html('');
+		// get the value of the tags the user submitted
+        var answerers = $(this).find("input[name='answerers']").val();
+        viewTopAnswerers(answerers);
 	});
 });
