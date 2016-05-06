@@ -7,3 +7,17 @@
 ul {
     list-style-type: none;
 }
+
+.parentContainer {
+    width: 100%;
+}
+
+.childContainer {
+    width: 20%;
+    margin: 0 auto;
+}
+
+.email {
+    top: 0px;
+    margin: 0 auto;
+}
